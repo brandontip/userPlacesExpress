@@ -1,6 +1,6 @@
 const HttpError = require("../models/http-error");
 
-const DUMMY_PLACES = [{
+let DUMMY_PLACES = [{
     id: 'p1',
     title: 'Empire State Building',
     description: 'One of the most famous sky scrapers in the world!',
@@ -14,11 +14,11 @@ const DUMMY_PLACES = [{
 }];
 
 const getPlacesByUserId = async (req, res, next) => {
-    let place = DUMMY_PLACES.find(p => p.creator === req.params.uid);
-    if(!place){
+    let places = DUMMY_PLACES.filter(p => p.creator === req.params.uid);
+    if(!places || places.length === 0){
         return next(new HttpError("Could not find a place for the provided user id.", 404));
     }
-    res.json({place});
+    res.json({places});
 }
 
 const getPlaceById = async (req, res, next) => {
@@ -28,6 +28,7 @@ const getPlaceById = async (req, res, next) => {
     }
     res.json({place});
 }
+
 
 const createPlace = async (req, res, next) => {
     const {title, description, coordinates, address, creator} = req.body;
@@ -44,6 +45,32 @@ const createPlace = async (req, res, next) => {
     console.log("Created place!");
 }
 
+
+const updatePlace = async (req, res, next) => {
+    const {title, description} = req.body;
+    let place = {... DUMMY_PLACES.find(p => p.id === req.params.pid)};
+    const placeIndex = DUMMY_PLACES.findIndex(p => p.id === req.params.pid);
+    if(!place){
+        return next(new HttpError("Could not find a place for the provided place id.", 404));
+    }
+    place.title = title;
+    place.description = description;
+    DUMMY_PLACES[placeIndex] = place;
+    res.status(200).json(place);
+}
+
+const deletePlace = async (req, res, next) => {
+    const placeId = req.params.pid;
+    if(!DUMMY_PLACES.find(p => p.id === placeId)){
+        throw new HttpError("Could not find a place for that id.", 404);
+    }
+    DUMMY_PLACES = DUMMY_PLACES.filter(p => p.id !== placeId);
+    res.status(200).json({message: "Deleted place."});
+
+}
+
 exports.getPlaceById = getPlaceById;
 exports.getPlacesByUserId = getPlacesByUserId;
 exports.createPlace = createPlace;
+exports.updatePlace = updatePlace;
+exports.deletePlace = deletePlace;
