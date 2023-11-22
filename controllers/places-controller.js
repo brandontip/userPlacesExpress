@@ -1,4 +1,5 @@
 const HttpError = require("../models/http-error");
+const { validationResult } = require("express-validator");
 
 let DUMMY_PLACES = [{
     id: 'p1',
@@ -31,6 +32,11 @@ const getPlaceById = async (req, res, next) => {
 
 
 const createPlace = async (req, res, next) => {
+    let errors= validationResult(req);
+    if(!errors.isEmpty()){
+        console.log(errors);
+        return next( new HttpError("Invalid inputs passed, please check your data.", 422));
+    }
     const {title, description, coordinates, address, creator} = req.body;
     const createdPlace = {
         id: crypto.randomUUID(),
@@ -47,6 +53,11 @@ const createPlace = async (req, res, next) => {
 
 
 const updatePlace = async (req, res, next) => {
+    let errors= validationResult(req);
+    if(!errors.isEmpty()){
+        console.log(errors);
+        return next( new HttpError("Invalid inputs passed, please check your data.", 422));
+    }
     const {title, description} = req.body;
     let place = {... DUMMY_PLACES.find(p => p.id === req.params.pid)};
     const placeIndex = DUMMY_PLACES.findIndex(p => p.id === req.params.pid);
@@ -66,7 +77,6 @@ const deletePlace = async (req, res, next) => {
     }
     DUMMY_PLACES = DUMMY_PLACES.filter(p => p.id !== placeId);
     res.status(200).json({message: "Deleted place."});
-
 }
 
 exports.getPlaceById = getPlaceById;
