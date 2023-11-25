@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// noinspection JSValidateTypes
 const placeSchema = mongoose.Schema({
     title: {type: String, required: true },
     description: {type: String, required: true},

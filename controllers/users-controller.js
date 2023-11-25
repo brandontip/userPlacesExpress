@@ -1,22 +1,18 @@
 const HttpError = require("../models/http-error");
 const { validationResult } = require("express-validator");
-
-
-
-const DUMMY_USERS = [
-    {
-        id: 'u1',
-        name: 'Max Schwarz',
-        email: 'asdf@gmail.com',
-        password: 'asdf',
-    }]
+const User = require("../models/user");
 
 
 const getUsers = async (req, res, next) => {
-    res.status(200).json({users: DUMMY_USERS});
+    let users;
+    try {
+        users = await User.find({}, '-password'); //exclude password
+    }
+    catch (err) {
+        return next(new HttpError("Fetching users failed, please try again later.", 500));
+    }
+    res.json({users: users.map(user => user.toObject({getters: true}))});
 };
-
-
 
 const signup = async (req, res, next) => {
     let errors= validationResult(req);
@@ -25,21 +21,46 @@ const signup = async (req, res, next) => {
         return next( new HttpError("Invalid inputs passed, please check your data.", 422));
     }
     const {name, email, password} = req.body;
-    const createdUser = {
-        id: crypto.randomUUID(),
+    let existingUser;
+    try {
+        existingUser = await User.findOne({email: email});
+    }
+    catch (err) {
+        return next(new HttpError("Signing up failed, please try again later.", 500));
+    }
+    if(existingUser){
+        return next(new HttpError("User exists already, please login instead.", 422));
+    }
+    const createdUser = new User({
         name,
         email,
-        password
-    };
-    DUMMY_USERS.push(createdUser);
-    res.status(201).json({user: createdUser});
+        image: "https://www.planetware.com/photos-large/USNY/new-york-city-empire-state-building.jpg",
+        password, //todo: hash password
+        places: "todo"
+    });
+
+    try{
+        await createdUser.save();
+    }
+    catch(err){
+        console.log(err);
+        return next(new HttpError("Signup failed, please try again.", 500));
+    }
+    res.status(201).json({user: createdUser.toObject({getters: true})});
+    console.log("Created user!");
 }
 
 const login = async (req, res, next) => {
     //dummy code until proper login is implemented
     const {email, password} = req.body;
-    const identifiedUser = DUMMY_USERS.find(u => u.email === email);
-    if(!identifiedUser || identifiedUser.password !== password){
+    let existingUser;
+    try {
+        existingUser = await User.findOne({email: email});
+    }
+    catch (err) {
+        return next(new HttpError("Login failed, please try again.", 500));
+    }
+    if(!existingUser || existingUser.password !== password){
         return next(new HttpError("Could not identify user, credentials seem to be wrong.", 401));
     }
     res.json({message: "Logged in!"});
