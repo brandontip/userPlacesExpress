@@ -36,7 +36,7 @@ const signup = async (req, res, next) => {
         email,
         image: "https://www.planetware.com/photos-large/USNY/new-york-city-empire-state-building.jpg",
         password, //todo: hash password
-        places: "todo"
+        places: []
     });
 
     try{
