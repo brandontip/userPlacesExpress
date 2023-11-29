@@ -1,6 +1,7 @@
 const HttpError = require("../models/http-error");
 const { validationResult } = require("express-validator");
 const User = require("../models/user");
+const fs = require("fs");
 
 
 const getUsers = async (req, res, next) => {
@@ -34,7 +35,7 @@ const signup = async (req, res, next) => {
     const createdUser = new User({
         name,
         email,
-        image: "https://www.planetware.com/photos-large/USNY/new-york-city-empire-state-building.jpg",
+        image: req.file.path,
         password, //todo: hash password
         places: []
     });
