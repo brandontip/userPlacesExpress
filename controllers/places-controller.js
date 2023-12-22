@@ -94,6 +94,10 @@ const updatePlace = async (req, res, next) => {
     catch (err) {
         return next(new HttpError("Something went wrong, could not update place.", 500));
     }
+    if(place.creator.toString() !== req.userData.userId){ //creator is an object from mongoose
+        return next(new HttpError("You are not allowed to edit this place.", 401));
+    }
+
     if(!place){
         return next(new HttpError("Could not find a place for the provided place id.", 404));
     }
@@ -117,6 +121,11 @@ const deletePlace = async (req, res, next) => {
     catch (err) {
         return next(new HttpError("Something went wrong, could not delete place.", 500));
     }
+    // different from update because we populated creator
+    if(place.creator.id !== req.userData.userId){
+        return next(new HttpError("You are not allowed to delete this place.", 401));
+    }
+
 
     if(!place){
         return next(new HttpError("Could not find a place for the provided id.", 404));
